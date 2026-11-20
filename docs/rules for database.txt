@@ -1,0 +1,51 @@
+1. Individual Accounts and Access
+- Every member must use their own Neon account. Do not share one account's email or password.
+- All members should be invited to the UniSphere Neon organization.
+- Keep project ownership and administrative permissions limited to responsible members.
+- Do not share database owner credentials with everyone.
+2. One Shared Development Database
+- Use one shared Neon project and development database for the team.
+- Everyone must work with the agreed database rather than creating separate, conflicting versions.
+- Coordinate before making changes that affect shared tables, relationships, columns, or constraints.
+3. GitHub for Code Collaboration
+- All backend code, SQLAlchemy models, and Alembic migration files must be maintained in the shared GitHub repository.
+- Do not directly overwrite another member's work.
+- Each member should work on a separate feature branch and submit changes through Pull Requests.
+- Review changes before merging them into the main branch.
+4. Use Alembic for Database Changes
+- Do not manually create, delete, or modify shared database tables through pgAdmin or the Neon SQL Editor.
+- Use SQLAlchemy models to define the database structure and Alembic migrations to apply changes.
+- Review generated migrations before applying them.
+- Coordinate schema changes with the team to avoid conflicting migrations.
+- Commit migration files to GitHub so everyone uses the same database structure.
+5. Protect Database Credentials
+- Never put database connection strings or passwords in frontend code, GitHub, or publicly shared documents.
+- Store credentials in the backend's .env file.
+- Add .env to .gitignore so it is never uploaded to GitHub.
+- Maintain a .env.example file containing placeholder values for other developers.
+- Use a separate, restricted database role for the application instead of connecting through the database owner account.
+- If credentials are accidentally exposed, change them immediately.
+6. Follow the Backend–Database Architecture
+- React/frontend must communicate with FastAPI, not directly with PostgreSQL.
+- FastAPI is responsible for authentication, authorization, validation, and business logic.
+- AI agents must access ERP functionality only through approved backend tools/services.
+- AI agents must never connect directly to the database or bypass backend permissions.
+7. Use Only Synthetic or Authorized Data
+- Use fictional/test data during development.
+- Do not upload actual university student records, grades, attendance, or financial information without explicit institutional authorization.
+- Do not send private student information to external AI providers without an approved data-handling arrangement.
+8. Follow Consistent Naming and Database Design
+- Follow the team's approved ERD and database design document.
+- Use consistent naming conventions for tables, columns, primary keys, and foreign keys.
+- Do not independently rename tables, change relationships, or introduce new tables without discussing the change with the team.
+- Ensure SQLAlchemy models and database migrations remain consistent with the approved design.
+9. Be Careful With Shared Database Operations
+- Do not run destructive SQL commands such as DROP TABLE, TRUNCATE, or unrestricted DELETE on the shared database.
+- Test potentially destructive changes on a separate development branch or test database first.
+- Coordinate before applying major schema changes.
+- Understand the available backup and restore options, and create a backup or suitable recovery point before risky changes.
+10. Keep Development Environments Consistent
+- All members should use the same agreed database structure and migration history.
+- After new migrations are merged, developers should pull the latest code and apply the migrations.
+- Do not maintain independent, incompatible versions of the database schema.
+- Test backend changes before merging them into the main branch.

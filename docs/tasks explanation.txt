@@ -1,0 +1,957 @@
+1. Requirements and system design
+This section is about deciding what you're building and how the pieces will work before you start implementing them.
+1.1 Gather and finalize functional requirements
+Functional requirements describe what the system must do.
+
+For your ERP, examples include:
+- A student can view their profile, register for courses, view grades, check attendance, and view fee records.
+- A faculty member can view assigned courses, record attendance, and enter marks for those courses.
+- Finance staff can manage fee records.
+- An administrator can manage academic data and view administrative reports.
+- An authenticated user can ask the AI helpdesk questions that they are authorized to ask.
+What you actually do: Write down the required features for every user role. Turn vague requirements into specific actions, and agree on what counts as completed functionality.
+
+Deliverable: A requirements document or checklist that the whole team follows.
+1.2 Define non-functional requirements
+These describe how well the system should work, rather than which features it has.
+
+Examples:
+- Security: students cannot view another student's private records.
+- Performance: ordinary pages and database queries should respond within an agreed time.
+- Reliability: errors should not leave registrations or grades in an inconsistent state.
+- Usability: users should be able to navigate the system without unnecessary complexity.
+- Maintainability: the code should be organized into understandable modules.
+- AI reliability: the helpdesk should use evidence and admit when it cannot answer.
+What you actually do: Define measurable acceptance criteria where possible. For example, decide what response-time target to test, rather than simply writing “the system should be fast.”
+
+Deliverable: A short list of quality, security, and performance requirements.
+1.3 Finalize project scope and features
+This is where you decide what is included in your final-year project and what is not.
+
+Your current scope includes profiles, courses, registration, grades and GPA/CGPA, attendance, fees, announcements, dashboards, reports, a document-based RAG helpdesk, and authorized ERP-connected AI queries.
+
+CLO/PLO attainment and a separate notification subsystem are excluded.
+
+What you actually do: Confirm the included modules, define the minimum working version of each, and prevent extra features from quietly expanding the project.
+
+Deliverable: A finalized scope document. A real payment gateway and a full production rollout across an entire university are not necessary unless your supervisor explicitly adds them.
+1.4 Define user roles and permissions
+Decide who can see and change each kind of information.
+Role	Typical permissions
+Student	View own profile, registration, grades, attendance, and fee records
+Faculty	View assigned courses and authorized student records; enter marks and attendance for assigned courses
+Finance staff	Manage authorized fee records and payment statuses
+Administrator	Manage authorized users and academic configuration, and view administrative reports
+
+What you actually do: Create a permission matrix. For example, determine whether faculty can edit marks after submission, who can change a student's registration, and whether administrators can access finance records.
+
+Deliverable: A role-and-permission table that guides both the backend and frontend.
+1.5 Identify end-to-end university workflows and use cases
+A workflow describes the sequence of steps required to complete an operation.
+
+For example, course registration might work like this:
+1. A student logs in.
+2. The student opens the course offerings for the current semester.
+3. The student selects a course.
+4. The backend checks prerequisites, available seats, and duplicate registration.
+5. The backend saves the registration if it is valid.
+6. The interface displays success or explains why the registration failed.
+What you actually do: Document similar workflows for adding courses, entering marks, calculating GPA, recording attendance, and viewing fees. Also include failure cases.
+
+Deliverable: Use-case descriptions and workflow diagrams.
+1.6 Review existing ERP and university AI helpdesk systems
+This means examining existing products to understand which features they offer and what your project needs to demonstrate.
+
+You can compare your selected systems by their academic modules, registration, grading, finance, reporting, AI capabilities, permissions, and limitations.
+
+What you actually do: Use your existing product comparison matrix, verify the features using available product documentation, and identify the specific gap your project addresses.
+
+Deliverable: A comparison matrix and a concise explanation of your project's purpose. You do not need to rebuild this research if your matrix is already complete.
+1.7 Design the overall system architecture
+Decide which components exist and how they communicate.
+
+For example:
+- React displays pages and sends requests.
+- FastAPI validates requests and applies business rules.
+- PostgreSQL stores university records.
+- The RAG pipeline searches approved documents.
+- LangGraph coordinates specialist agents.
+- AI agents call permitted backend tools when they need ERP information.
+What you actually do: Draw a component diagram and define the responsibilities of each component.
+
+Deliverable: A system architecture diagram.
+1.8 Design the database ERD and relational schema
+An ERD is a diagram showing the entities in your database and the relationships between them.
+
+Possible entities include:
+- User, Student, Faculty
+- Department, Program
+- Course, Semester, CourseOffering
+- Registration, Assessment, Grade
+- AttendanceRecord
+- FeeRecord
+- Announcement
+- Document and document-chunk metadata
+What you actually do: Decide which tables are required, what information each table stores, and how they relate. For instance, a student can have many registrations, while a course offering belongs to a particular semester and course.
+
+Deliverable: An ERD and a table/schema design.
+1.9 Define database relationships, constraints, and normalization
+This is about making sure your database stores information consistently.
+
+Examples:
+- Each user has a unique login identifier.
+- A registration refers to an existing student and course offering.
+- The same student cannot register for the same offering twice.
+- A grade cannot refer to a nonexistent registration.
+- Student information should not be duplicated in every course registration row.
+What you actually do: Define primary keys, foreign keys, uniqueness rules, appropriate data types, and validation constraints. Normalize tables to reduce duplicated data and update anomalies.
+
+Deliverable: A consistent relational schema with documented constraints.
+1.10 Define backend API structure and module boundaries
+An API is how the frontend or another component requests functionality from the backend.
+
+Examples of endpoints could be:
+- GET /courses — retrieve available courses.
+- POST /registrations — request course registration.
+- GET /students/me/grades — retrieve the authenticated student's grades.
+- GET /fees/me — retrieve the authenticated student's fee records.
+These are illustrative endpoint names; your team will finalize the actual API design.
+
+What you actually do: Decide which endpoints exist, what data they accept and return, who can use them, and which backend module owns each operation.
+
+Deliverable: An API specification, including request/response examples and permission requirements.
+1.11 Design the multi-agent architecture and communication workflow
+Decide which agents exist, what each is responsible for, and when the system invokes them.
+
+Your proposed agents are:
+- Policy and Information Agent: answers questions from approved university documents.
+- Academic Records and Registration Agent: handles authorized academic-record queries.
+- Finance and Student Services Agent: handles authorized fee and relevant administrative queries.
+- Shared orchestrator: decides where questions should go and combines results.
+What you actually do: Draw the workflow from receiving a query to routing it, calling the necessary tools, checking results, and returning an answer.
+
+Deliverable: An agent architecture diagram and a clear responsibility definition for each agent.
+1.12 Define security boundaries between the AI system and ERP backend
+The AI model should not become an unrestricted route into the university database.
+
+What you actually do: Define which tools agents can call, which data each tool can return, how the authenticated user's identity and role are passed through, and where permissions are checked. Decide what happens when a user asks for somebody else's information.
+
+Deliverable: A security design documenting how the backend protects data even if an AI agent makes an incorrect request.
+
+2. Database and backend foundation
+This is the base on which all the ERP modules depend. If it is poorly designed, every subsequent module becomes harder to implement.
+2.1 Set up the PostgreSQL database
+Install or configure PostgreSQL, create the project database, and establish the connection settings the backend will use.
+
+What you actually do: Configure the database name, credentials, connection string, and development environment. Confirm that the backend can connect successfully.
+
+Deliverable: A running database accessible from your FastAPI application.
+2.2 Create database models and relationships
+Database models define how tables are represented in your Python code, commonly using SQLAlchemy.
+
+For example, a Student model might contain a student identifier, linked user account, program, and other approved profile fields. A Registration model would link a student to a course offering.
+
+What you actually do: Create the SQLAlchemy models, define their fields and relationships, and ensure they match your ERD.
+
+Deliverable: Working Python models corresponding to your database design.
+2.3 Implement database migrations
+Migrations are controlled changes to the database structure over time.
+
+For example, if you later add a field to a course offering, a migration applies that schema change without manually rebuilding the whole database.
+
+What you actually do: Set up Alembic, generate and review migrations, and verify that a new database can be created from the migration history.
+
+Deliverable: Version-controlled database changes that team members can reproduce.
+2.4 Add keys, constraints, and validation constraints
+This is the implementation of the rules defined in the schema.
+
+What you actually do: Add primary and foreign keys, unique constraints, required fields, appropriate checks, and request-level validation. Database constraints should protect data even if a request bypasses a frontend validation rule.
+
+Deliverable: A database that rejects invalid relationships and duplicate records where prohibited.
+2.5 Create seed data and synthetic test accounts
+Seed data is sample information used to develop and demonstrate the application.
+
+You might create fictional students, faculty members, courses, semester offerings, registrations, attendance records, and fee records.
+
+What you actually do: Write scripts that populate the database with consistent, clearly fictional records. Create demonstration accounts for the required roles.
+
+Deliverable: A repeatable way to set up a usable demo environment without exposing real student data.
+2.6 Set up the FastAPI backend
+FastAPI is the Python framework that will receive requests and expose your application APIs.
+
+What you actually do: Create the project structure, configure the application, connect the database, organize route handlers and services, and provide basic health-check and API documentation endpoints.
+
+Deliverable: A functioning backend that can receive requests and interact with PostgreSQL.
+2.7 Implement common request validation and error handling
+Requests may contain missing fields, invalid IDs, incorrect formats, or values that violate business rules.
+
+What you actually do: Define Pydantic request/response schemas, validate inputs, return consistent error messages, and prevent unexpected exceptions from exposing sensitive information.
+
+For example, attempting to register for a full course should return a meaningful error rather than a generic server crash.
+
+Deliverable: Predictable input validation and error responses across the application.
+2.8 Establish REST API conventions
+Consistency makes the APIs easier to develop, test, and maintain.
+
+What you actually do: Agree on endpoint naming, HTTP methods, response formats, pagination where needed, status codes, and error structures.
+
+Deliverable: A consistent API style used by every backend module.
+2.9 Implement authentication and secure password hashing
+Authentication establishes who is logging in.
+
+What you actually do: Implement login, password verification, session or token handling, logout or token invalidation as appropriate, and secure password hashing. Never store plaintext passwords.
+
+Deliverable: Users can authenticate and receive an identity the backend can verify on subsequent requests.
+2.10 Implement role-based access control (RBAC)
+RBAC determines which actions a user is allowed to perform based on their role and permissions.
+
+What you actually do: Implement permission checks in backend dependencies or service functions. For example, faculty should not be able to edit marks for a course they do not teach merely because they have the faculty role.
+
+Deliverable: Role-aware backend authorization.
+2.11 Implement server-side authorization for protected records and operations
+A role alone is not enough. The backend must also verify which specific record the user can access.
+
+What you actually do: Check the authenticated user, record ownership, assigned courses, and applicable permissions on every protected operation. For example, a student should be able to retrieve their own grades without being able to change the student ID in the request and retrieve someone else's grades.
+
+Deliverable: Record-level access controls that prevent unauthorized data exposure.
+2.12 Implement common database transaction and integrity handling
+A transaction ensures that related database changes succeed or fail together.
+
+For example, if course registration involves creating a registration record and updating related state, the operation must not leave the database partially updated if an error occurs.
+
+What you actually do: Use transactions, handle concurrent requests, and decide how the system behaves if two students attempt to take the final seat in a course at the same time.
+
+Deliverable: Consistent data even when operations fail or requests overlap.
+
+3. Student and faculty management
+This section creates the basic people-related functionality of your ERP. Other modules depend on it because courses, marks, attendance, and fees all need to be associated with the correct users.
+3.1 Create student profiles
+Build the functionality for storing and viewing student information.
+
+What you do:
+- Define the student fields required by your scope, such as student ID, program, semester, and linked account.
+- Implement APIs to retrieve student profiles and create or update them where authorized.
+- Connect each profile to its login account.
+- Ensure each student sees only their permitted information.
+Example: A student logs in and sees their student ID, academic program, and profile information.
+
+Finished result: Student records can be managed and accessed securely.
+3.2 Create faculty profiles
+Build the equivalent profile functionality for faculty members.
+
+What you do:
+- Store faculty identifiers and relevant department information.
+- Link each faculty profile to a user account.
+- Implement authorized viewing and editing.
+- Link faculty members to their assigned course offerings.
+Example: A faculty member logs in and views their profile and assigned courses.
+
+Finished result: Faculty members are represented in the system and can be associated with academic responsibilities.
+3.3 Implement profile viewing and editing according to permissions
+Not every user should be able to change every field.
+
+What you do: Create profile-viewing and editing endpoints, decide which fields each role can edit, and enforce those rules in the backend. Students might edit permitted contact information, while administrators manage other fields.
+
+Finished result: Profile management works without allowing unauthorized modifications.
+3.4 Manage departments and academic programs
+Represent the university's organizational and academic structure.
+
+What you do:
+- Create department and program records.
+- Link programs to departments.
+- Associate students and faculty with the appropriate records.
+- Provide authorized creation, editing, and viewing functions.
+Example: The Computer Science program belongs to a department, and students enrolled in that program are linked to it.
+
+Finished result: Academic records share a consistent organizational structure.
+3.5 Connect users to their relevant academic records and roles
+Ensure the system knows which student or faculty profile belongs to a particular login account.
+
+What you do: Link user IDs to student/faculty records, connect students to registrations and grades, and connect faculty members to their course assignments. Verify that these relationships are used in permission checks.
+
+Finished result: When a user logs in, the application retrieves the correct academic records for that user.
+
+4. Course and semester management
+This module allows administrators to define what students can study during a particular semester.
+4.1 Create and manage the course catalogue
+The course catalogue is the university's collection of courses.
+
+What you do: Create course records with fields such as course code, title, credit hours, and description. Implement authorized functions for adding, viewing, editing, and, where appropriate, deactivating courses.
+
+Example: A course called Database Systems has a unique course code and a defined number of credit hours.
+
+Finished result: The system has a reusable catalogue of academic courses.
+4.2 Create and manage semesters
+A semester represents a particular academic period.
+
+What you do: Store the semester name, academic year, dates, and relevant status. Implement functionality for creating semesters and determining which one is currently open for registration.
+
+Finished result: Courses and student registrations can be associated with the correct academic period.
+4.3 Configure course offerings for each semester
+A course in the catalogue is not necessarily available every semester. A course offering represents a course being offered in a specific semester.
+
+What you do: Link a course to a semester, and store its offering-specific details, such as capacity and assigned faculty.
+
+Example: Database Systems may have an offering in Fall 2026 and a different offering in Spring 2027.
+
+Finished result: Students see courses that are actually offered in the relevant semester.
+4.4 Assign courses to faculty members
+What you do: Implement a way for authorized administrators to assign a faculty member to a course offering. Validate that the faculty member exists and that the assignment is consistent with your rules.
+
+Finished result: The system knows which faculty member is responsible for each offering, and this information can control marks entry and attendance permissions.
+4.5 Manage course prerequisites
+Prerequisites are courses or conditions that a student must satisfy before registering for another course.
+
+What you do: Define prerequisite relationships and write validation logic that checks the student's relevant academic history.
+
+Example: If a student must pass Programming Fundamentals before taking Data Structures, the registration endpoint checks the student's record before approving registration.
+
+Finished result: The backend prevents registration when required prerequisites have not been satisfied.
+4.6 Configure course seat capacities
+Each course offering may have a maximum number of students.
+
+What you do: Store the seat limit, count valid registrations, and reject requests when the offering is full. Make the operation safe when several students register simultaneously.
+
+Finished result: Course capacities are enforced by the backend, not merely displayed in the interface.
+4.7 Display available courses and their details
+What you do: Create an API and interface that show relevant course offerings, including their codes, credit hours, assigned faculty, prerequisites, and available seats.
+
+Finished result: Students can explore the courses available for registration.
+
+5. Course registration
+This module takes the course catalogue and turns it into an actual registration workflow.
+5.1 Implement student course registration
+What you do: Create the registration endpoint and interface. When a student chooses an offering, the backend verifies their identity, checks the rules, and saves the registration if valid.
+
+Finished result: Students can register for courses through the ERP.
+5.2 Validate prerequisite requirements
+What you do: Check the student's relevant completed courses and grades against the prerequisite rules defined for the selected offering.
+
+Finished result: Students who do not meet the configured prerequisites cannot register.
+5.3 Validate course capacity
+What you do: Check the number of active registrations against the offering's capacity, handling simultaneous requests correctly.
+
+Finished result: The system does not knowingly accept registrations beyond the allowed capacity.
+5.4 Prevent duplicate or invalid registrations
+What you do: Reject duplicate registrations, invalid course-offering IDs, registrations for unavailable semesters, and other prohibited cases.
+
+Finished result: The same student cannot accidentally register twice for the same offering.
+5.5 Store and display registration status
+What you do: Define the statuses your workflow needs, such as registered, rejected, or dropped if dropping courses is included in scope. Store the status and show it to authorized users.
+
+Finished result: Users can see whether a registration was accepted or rejected and why.
+5.6 Allow authorized users to view relevant registration records
+What you do: Build queries and screens for students to view their own registrations, faculty to view relevant enrolled students, and administrators to access authorized registration records.
+
+Finished result: Each role sees the appropriate registration information.
+5.7 Handle registration errors and conflicting requests
+What you do: Deal with full courses, unmet prerequisites, duplicate requests, unavailable semesters, and concurrent registrations. Return meaningful errors and ensure failed operations do not corrupt the database.
+
+Finished result: Registration remains reliable even when requests are invalid or arrive simultaneously.
+
+6. Assessment, grading, and transcripts
+This module manages the marks students earn and turns them into academic results.
+6.1 Implement assessment and marks entry
+An assessment is a component used to evaluate a student, such as an assignment, quiz, midterm, or final exam.
+
+What you do:
+- Define how assessments are represented.
+- Store their names, maximum marks, weights, and associated course offerings.
+- Create forms and APIs for entering marks.
+- Validate that marks fall within permitted limits.
+Example: A course has a midterm worth 30% and a final exam worth 50%, with other assessments contributing the remaining 20%.
+
+Finished result: Authorized faculty can record marks against defined assessments.
+6.2 Allow authorized faculty to manage marks for their assigned courses
+What you do: Check the faculty member's assignment before allowing marks to be entered or modified. Define whether marks can be edited after submission and whether administrator intervention is required.
+
+Finished result: Faculty cannot edit the grades of unrelated courses.
+6.3 Implement configurable grading rules
+Different institutions may use different grade boundaries or assessment weights.
+
+What you do: Store or configure the grading scale and assessment calculation rules. Avoid hardcoding one grading system throughout the codebase if your design requires it to be configurable.
+
+Finished result: The system applies the configured rules consistently.
+6.4 Calculate final grades using the configured rules
+What you do: Calculate the final course score from the assessment marks and their weights, then apply the configured grading scale.
+
+For example, if the weighted total is 84 out of 100, the system looks up the grade corresponding to 84 under your configured scale.
+
+Finished result: Final course results are calculated consistently by backend code.
+6.5 Calculate GPA
+GPA summarizes performance across courses for a particular academic period, using the institution's grading rules and credit-hour weighting.
+
+A common weighted formula is:
+\[
+\text{GPA} =
+\frac{\sum_i(\text{grade points}_i \times \text{credit hours}_i)}
+{\sum_i \text{credit hours}_i}
+\]
+
+What you actually do: Implement the calculation using the configured grade-point scale and applicable courses. Decide how retakes, withdrawals, incomplete grades, and failed courses are treated according to your project's rules.
+
+Finished result: The system produces GPA values that can be checked against manually calculated examples.
+6.6 Calculate CGPA
+CGPA summarizes academic performance across the relevant completed semesters.
+
+What you do: Aggregate the applicable grade points and credit hours across semesters, following the chosen institutional rules. Avoid simply averaging semester GPAs unless that is specifically the correct calculation for your rules.
+
+Finished result: Students can view their cumulative academic performance.
+6.7 Generate transcript-style academic reports
+A transcript-style report presents a student's academic history.
+
+What you do: Combine semester details, course codes and names, credit hours, grades, grade points, GPA, and CGPA into a readable report. Decide whether the report is a webpage, printable page, or downloadable PDF.
+
+Finished result: Students and authorized administrators can view an academic summary in transcript format. This need not be an officially certified university transcript.
+6.8 Validate grade calculations against test cases
+What you do: Prepare known input values and manually calculated expected results. Test ordinary cases and edge cases, including missing marks, zero marks, grade boundaries, and courses with different credit hours.
+
+Finished result: Automated tests demonstrate that the calculations follow the configured rules.
+6.9 Restrict access to marks, grades, and transcripts
+What you do: Enforce permissions on both retrieval and modification endpoints. Test attempts to access another student's results and unauthorized attempts to change marks.
+
+Finished result: Academic results are protected by backend authorization.
+
+7. Attendance management
+This module records whether students attended their classes and summarizes their attendance.
+7.1 Record student attendance
+What you do: Create attendance sessions or records associated with a course offering and date. Let authorized faculty record the attendance status of enrolled students.
+
+Finished result: Attendance records are stored against the correct students and classes.
+7.2 View attendance records
+What you do: Create endpoints and screens for students to view their own attendance and for faculty to view attendance in their assigned offerings.
+
+Finished result: Each user can view the records permitted by their role.
+7.3 Calculate attendance summaries or percentages
+What you do: Calculate attendance totals and percentages using the attendance statuses and counting rules defined by your team.
+
+For instance, if a student attended 18 out of 20 counted sessions, the attendance percentage would be 90%.
+
+Finished result: The ERP displays meaningful attendance summaries.
+7.4 Restrict attendance entry to authorized users
+What you do: Verify that attendance is entered or modified only by authorized users, such as faculty assigned to the relevant offering or an explicitly authorized administrator.
+
+Finished result: Students cannot modify their own attendance records.
+7.5 Provide authorized attendance reports
+What you do: Provide course-level or student-level summaries for users who are allowed to see them. Include relevant totals, percentages, and possibly lists of absences.
+
+Finished result: Faculty and administrators can review attendance without manually compiling individual records.
+
+8. Fee management
+This module maintains students' fee information and payment statuses. It is not automatically a payment-processing system.
+8.1 Create and manage fee invoices or fee records
+What you do: Define how a fee record is associated with a student, the amount due, the due date, and the relevant fee category or semester if needed.
+
+Finished result: The system can store and manage fee obligations.
+8.2 Record fee amounts and balances
+What you do: Store the amount charged, any recorded payments or adjustments supported by your design, and the outstanding balance. Define how the balance is calculated so it cannot become inconsistent with the underlying records.
+
+Finished result: Users can see the amount charged and what remains due.
+8.3 Maintain payment-status records
+What you do: Define statuses such as unpaid, partially paid, paid, or overdue if applicable. Implement authorized functions for updating payment records and validating status changes.
+
+Finished result: The ERP accurately represents the recorded payment status. It does not prove that money was transferred unless the system has a verified payment integration, which is outside your stated minimum scope.
+8.4 Display fee details to authorized users
+What you do: Build a fee page showing the relevant charges, balances, due dates, and payment statuses. Students should only see their own records, while authorized finance staff may access records according to their permissions.
+
+Finished result: Users can review the financial information they are entitled to access.
+8.5 Provide relevant finance summaries and reports
+What you do: Generate summaries such as total recorded fees, outstanding balances, and counts of paid or unpaid records, according to your reporting requirements.
+
+Finished result: Authorized finance users can understand the state of fee records without manually calculating everything.
+8.6 Protect financial information using server-side permissions
+What you do: Restrict finance endpoints, validate the user's access to individual records, and test attempts to retrieve other students' financial information.
+
+Finished result: Sensitive financial data cannot be accessed simply by changing an ID in a request or asking an AI agent for someone else's fee details.
+
+9. Announcements, dashboards, and reports
+This section gives users an overview of relevant information and provides a way to communicate general university updates through the ERP.
+9.1 Implement announcement creation and management
+What you do: Create announcement records with a title, content, creator, publication time, and any relevant audience or status fields. Provide authorized functions for creating, editing, and managing announcements.
+
+Finished result: Authorized users can publish university or academic announcements.
+9.2 Display announcements to the relevant users
+What you do: Create queries that return announcements appropriate to the authenticated user's audience, such as all users or a particular student/faculty group.
+
+Finished result: Users can see the announcements relevant to them. This is an announcement display feature, not a separate notification subsystem.
+9.3 Create student dashboards
+What you do: Design a home page with useful summaries, such as current registrations, GPA/CGPA, attendance, fee balance, and announcements.
+
+Finished result: Students can access important information without opening every module individually.
+9.4 Create faculty dashboards
+What you do: Show assigned course offerings, relevant class information, pending marks or attendance tasks if supported, and relevant announcements.
+
+Finished result: Faculty can quickly access the academic tasks and records relevant to their assignments.
+9.5 Create administrative dashboards
+What you do: Provide authorized administrators with overviews of students, faculty, course offerings, registrations, grades, attendance, and other configured indicators.
+
+Finished result: Administrators have a central overview of academic and administrative data.
+9.6 Display academic and registration summaries
+What you do: Create backend queries that calculate figures such as registrations per offering, enrolled student counts, and relevant semester summaries.
+
+Finished result: Dashboards display figures derived from actual database records.
+9.7 Display grade, GPA/CGPA, attendance, and fee summaries
+What you do: Reuse the calculation logic from the relevant modules to display academic and financial summaries. Enforce the same permissions as the underlying records.
+
+Finished result: Summary figures are consistent with the underlying data and only visible to authorized users.
+9.8 Generate administrative reports
+What you do: Build filtered views or reports for relevant administrative questions, such as registration counts, course enrollment, or attendance summaries.
+
+Finished result: Authorized staff can retrieve useful structured information for review.
+9.9 Implement charts and visual summaries
+What you do: Use a chart library such as Recharts to turn aggregated results into bar charts, line charts, or other appropriate visualizations.
+
+Finished result: The dashboard communicates trends and comparisons visually. Charts should display actual returned data, not hardcoded demonstration numbers.
+
+10. RAG document retrieval pipeline
+This is one of the most important AI components of your FYP. RAG stands for Retrieval-Augmented Generation. It allows the AI to answer questions using relevant information retrieved from your university documents instead of relying only on what the model learned during training.
+
+For example, if a student asks, “What is the procedure for withdrawing from a course?”, the system searches approved academic policies and uses the relevant passages to construct an answer.
+10.1 Collect approved university documents or prepare synthetic documents
+What you do: Gather documents that the system is allowed to use, such as academic regulations, course registration guidelines, grading policies, and fee policies. If real documents are unavailable, prepare clearly labelled synthetic documents for the prototype.
+
+Finished result: A defined collection of documents against which the helpdesk can retrieve information.
+10.2 Implement document ingestion
+Ingestion is the process of importing documents into your system.
+
+What you do: Create a process that accepts supported files, extracts their content, and stores the relevant metadata. Track information such as the document title, version, and ingestion status.
+
+Finished result: Documents can be added to the RAG knowledge base through a repeatable process.
+10.3 Extract text from supported document formats
+Documents can contain text in different formats, such as PDF or DOCX.
+
+What you do: Use appropriate parsing libraries to extract readable text. Handle empty files, unsupported formats, extraction errors, and documents with difficult layouts. Scanned PDFs may require OCR if you decide to support them.
+
+Finished result: The system can obtain usable text from the document formats you choose to support.
+10.4 Split documents into searchable chunks
+A large document is usually divided into smaller passages called chunks.
+
+What you do: Choose chunk sizes and overlap settings, then split the extracted text while preserving enough context. Associate each chunk with its original document and relevant page or section information where available.
+
+Why it matters: If an entire 100-page policy is treated as one unit, retrieval may be too broad. Smaller chunks make it easier to find the passage that actually answers a question.
+
+Finished result: Documents are represented as searchable passages with traceable source metadata.
+10.5 Generate embeddings
+An embedding is a numerical representation of text that helps a system compare semantic meaning.
+
+For example, a question about “dropping a subject” might be semantically related to a document passage titled “course withdrawal,” even though the wording differs.
+
+What you do: Select an embedding model, convert document chunks into vectors, and ensure queries are embedded in a compatible way. Your proposal mentions Sentence Transformers as one possible approach.
+
+Finished result: Every indexed chunk has an embedding that can be used for semantic search.
+10.6 Store embeddings in PostgreSQL using pgvector
+What you do: Create a suitable database table containing the chunk text, document reference, metadata, and embedding vector. Configure pgvector and the relevant search index or query strategy.
+
+Finished result: Your system can store and retrieve document embeddings within PostgreSQL.
+10.7 Implement semantic retrieval
+What you do: Convert a user's question into an embedding, compare it with stored document embeddings, and retrieve the most relevant passages.
+
+You will need to choose retrieval settings, such as how many passages to return and whether to apply metadata filters.
+
+Finished result: The RAG pipeline returns candidate passages related to a question.
+10.8 Retrieve relevant document passages for a query
+This task focuses on making retrieval useful for actual user questions, rather than just proving that vector search runs.
+
+What you do: Test different question types, inspect retrieved passages, adjust chunking and retrieval parameters, and make sure irrelevant documents do not dominate the results.
+
+Finished result: The system retrieves passages that are relevant enough to support an answer.
+10.9 Select supporting evidence for AI-generated answers
+Retrieval may return several passages, and not all of them will be useful.
+
+What you do: Choose which passages provide evidence for the answer. Supply the selected evidence to the language model and instruct it to answer from that evidence rather than inventing unsupported policy details.
+
+Finished result: The model receives relevant context before generating its response.
+10.10 Preserve document references for source attribution
+What you do: Keep each chunk's source document, title, and page or section information when available. Pass this metadata through retrieval and generation.
+
+Finished result: The interface can show which approved document supports an answer.
+10.11 Handle missing, irrelevant, or insufficient evidence
+A reliable RAG system must sometimes say it cannot answer.
+
+What you do: Establish rules for recognizing weak or insufficient retrieval results, avoid generating confident policy claims without evidence, and return a helpful fallback response.
+
+For example: “I couldn't find a supporting policy in the available documents. Please consult the relevant university office.”
+
+Finished result: The helpdesk can abstain rather than confidently inventing university rules.
+
+11. Individual AI agents
+Your multi-agent system should use a small number of specialist agents with distinct responsibilities. The agents are not separate copies of the entire ERP, and you do not need a separate agent for every ERP module.
+
+An agent is a model-driven component that receives a task, follows instructions, and may call a limited set of tools to complete that task.
+11.1 Policy and Information Agent
+This agent handles questions answered by approved university documents.
+
+What you do:
+- Define the types of policy and general-information questions it handles.
+- Give it access to the document retrieval tool.
+- Provide instructions for using retrieved evidence.
+- Require source references when supporting documents are available.
+- Configure fallback behavior when evidence is missing.
+Example: “What is the university's course withdrawal policy?”
+
+The agent retrieves relevant policy passages and generates a grounded answer.
+
+Finished result: A document-focused agent that can answer policy questions with supporting sources.
+11.2 Academic Records and Registration Agent
+This agent handles questions about academic information available through authorized ERP functions.
+
+What you do:
+- Define which academic queries it can handle.
+- Connect it to permitted tools for courses, registrations, attendance, marks, grades, GPA/CGPA, and transcript-style records.
+- Ensure calculations come from backend functions.
+- Ensure protected data is retrieved only after server-side authorization.
+Example: “Which courses am I registered for this semester?”
+
+The agent requests the relevant records through an authorized backend tool and explains the result.
+
+Finished result: An academic specialist that can answer supported queries using actual ERP records.
+11.3 Finance and Student Services Agent
+This agent handles fee information and other relevant administrative queries that fall within its defined scope.
+
+What you do:
+- Define which fee and administrative queries it can answer.
+- Connect it to approved tools for fee records, balances, invoices, and payment statuses.
+- Restrict access to financial records.
+- Handle questions that fall outside its supported responsibilities.
+Example: “What is my outstanding fee balance?”
+
+The agent retrieves the balance through an authorized backend function.
+
+Finished result: A finance-focused agent that reports actual recorded information instead of guessing amounts.
+11.4 Define the responsibilities and tools available to each agent
+What you do: Create a specification for every agent. Define its purpose, inputs, allowed tools, permitted outputs, and situations in which it should refuse or hand off a query.
+
+For instance, the Policy Agent should not have unrestricted access to student financial records simply because it is part of the same AI system.
+
+Finished result: Clearly separated responsibilities and minimal, purpose-specific tool access.
+11.5 Implement each agent's instructions and request-handling logic
+What you do: Write the prompts or instructions that guide each agent. Define how it interprets a request, uses available evidence, calls tools, handles missing data, and produces a response.
+
+Finished result: Each specialist follows a consistent procedure rather than behaving as an unrestricted general-purpose chatbot.
+11.6 Connect each agent to its required retrieval functions or backend APIs
+What you do: Connect the Policy Agent to document search and connect the academic and finance agents to the appropriate backend tools. Define the input and output schemas for each tool.
+
+Finished result: Agents can access the information they need through controlled interfaces.
+11.7 Handle unsupported questions and agent errors
+What you do: Decide what happens when an agent receives an unrelated question, a tool fails, a database request times out, or the requested record is unavailable. Return safe, understandable messages rather than fabricated answers.
+
+Finished result: The agents fail gracefully and do not treat every tool error as if the requested information does not exist.
+
+12. Multi-agent orchestration
+The agents above are specialists. Orchestration is the logic that coordinates them. Your proposed framework is LangGraph.
+
+Imagine LangGraph as a workflow that controls which agent runs, what state is passed between steps, and when the final response is returned.
+12.1 Implement the shared LangGraph workflow
+What you do: Define the graph's nodes, edges, state, and completion conditions. Nodes may represent routing, agent execution, tool calls, validation, and response generation.
+
+Finished result: A functioning workflow that coordinates the specialist agents.
+12.2 Implement query-intent classification and routing
+The system needs to determine what kind of question a user is asking.
+
+What you do: Classify requests into categories such as university policy, academic records, finance, or a combination of these. Implement routing rules that send each request to the appropriate agent.
+
+Example: “How many credits am I taking, and what is the registration deadline?”
+
+This may require the Academic Agent to retrieve the student's registration and the Policy Agent to retrieve the deadline.
+
+Finished result: Queries reach the appropriate specialist instead of being handled by one generic chatbot.
+12.3 Route questions to the appropriate specialist agent
+What you do: Connect the intent classification result to the correct agent node. Define what happens when the intent is unclear or the request is outside the system's scope.
+
+Finished result: The graph reliably selects the intended specialist.
+12.4 Implement agent handoffs and tool invocation
+Sometimes an agent needs another agent or a backend tool to complete a request.
+
+What you do: Define how control passes between nodes, how tool arguments are validated, and how tool results return to the calling agent.
+
+Finished result: Agents can perform permitted operations within a controlled workflow.
+12.5 Handle queries requiring multiple steps or sources
+What you do: Support workflows that require more than one retrieval or backend request. Define dependencies between steps and avoid unnecessary calls.
+
+Example: To answer a question about whether a student satisfies a policy requirement, the system may need to retrieve the student's authorized academic information and the relevant policy passage.
+
+Finished result: The system can answer supported multi-part questions using multiple sources.
+12.6 Manage workflow state and error handling
+What you do: Define which information is retained as the workflow progresses, how tool errors are represented, and when the graph should retry, stop, or return a fallback response.
+
+Finished result: The workflow does not lose important information or continue indefinitely after a failure.
+12.7 Combine agent results into a final response
+What you do: Gather the relevant results from the agents, remove unnecessary duplication, and create a coherent final response. Preserve the source references for document-based claims.
+
+Finished result: Users receive one understandable answer rather than disconnected outputs from several agents.
+12.8 Implement fallback behavior when the system cannot answer reliably
+What you do: Define conditions for stopping the workflow when the evidence is insufficient, a tool fails, or the request is unsupported. Avoid retry loops that repeatedly produce the same failure.
+
+Finished result: The system can explain its limitations instead of pretending every query succeeded.
+12.9 Display supporting sources when available
+What you do: Pass source metadata from the retrieval pipeline through the graph to the frontend. Display document titles and page or section references where available.
+
+Finished result: Users can inspect the documents supporting policy answers. ERP-record answers should be clearly distinguished from document citations; a database record is not the same kind of source as a university policy document.
+
+13. Secure AI-to-ERP integration
+This is where the AI helpdesk becomes genuinely connected to the ERP rather than just answering questions from documents.
+
+It is also one of the most security-sensitive parts of the project.
+13.1 Define the ERP backend tools that AI agents are allowed to use
+A tool is a controlled function the agent can call.
+
+Examples include:
+- Search available course offerings.
+- Retrieve the authenticated student's registrations.
+- Retrieve the authenticated student's GPA/CGPA.
+- Retrieve authorized attendance summaries.
+- Retrieve the authenticated student's fee balance.
+What you do: Specify each tool's purpose, required arguments, output format, permitted users, and error behavior.
+
+Finished result: A limited, documented collection of backend functions available to the AI system.
+13.2 Implement authorized read tools for student and academic records
+What you do: Implement the academic tools using existing backend services or APIs. Derive the requesting user's identity from the authenticated context and check the relevant permissions.
+
+Finished result: The AI can retrieve authorized academic records without being given unrestricted database access.
+13.3 Implement authorized read tools for fee and finance records
+What you do: Implement functions that retrieve permitted invoices, balances, and payment statuses. Check that the user is entitled to see the requested financial information.
+
+Finished result: The finance agent can answer supported finance questions using actual records.
+13.4 Pass authenticated user context into protected tool calls
+What you do: Ensure tool calls are associated with the identity and permissions of the person who initiated the request. The model must not be trusted to declare its own identity or grant itself a role.
+
+Finished result: A request made through the AI interface is subject to the same authorization rules as a request made through the ordinary ERP interface.
+13.5 Enforce permissions on the backend for every protected tool call
+What you do: Validate authorization inside the backend operation that retrieves or changes a protected record. Do not rely on an agent prompt saying “only access your own records.”
+
+Finished result: The security rule is enforced even if the model generates an incorrect tool request.
+13.6 Prevent agents from accessing unauthorized records
+What you do: Limit tool access, validate record ownership and role permissions, and test adversarial queries such as requests to reveal another student's transcript or fee balance.
+
+Finished result: Unauthorized data requests are rejected by the backend.
+13.7 Ensure official calculations use backend business rules rather than AI-generated arithmetic
+What you do: Have the agent call the official GPA, CGPA, fee-balance, or attendance-summary function instead of asking the model to calculate the value from conversational context.
+
+Finished result: Official numerical answers come from deterministic code and database records, not potentially inaccurate language-model arithmetic.
+13.8 Prevent unsupported AI answers from being presented as verified university facts
+What you do: Separate retrieved evidence and tool results from generated explanations. Instruct agents not to invent policies, claim a registration succeeded without confirmation, or report a balance when the backend request failed.
+
+Finished result: The interface communicates what the system actually verified.
+13.9 Handle unauthorized requests and insufficient evidence safely
+What you do: Define separate responses for access denied, record not found, service unavailable, and insufficient policy evidence. Avoid revealing sensitive details in error messages.
+
+Finished result: The system handles security and information gaps without leaking private data.
+13.10 Integrate the AI helpdesk into the ERP web interface
+What you do: Add a chat interface, send authenticated requests to the backend, display the response and sources, and handle loading and error states. Ensure the backend associates the request with the current user.
+
+Finished result: A user can ask questions through the same ERP application they use for academic and administrative tasks.
+
+14. Frontend development
+The frontend is the part users see and interact with. Your stack uses React, TypeScript, and Tailwind CSS.
+
+Antigravity can help build these screens, but you should give it the API contracts and database-backed requirements so it doesn't create attractive interfaces filled with fake data.
+14.1 Set up the React and TypeScript frontend
+What you do: Create the frontend project, install dependencies, configure the development server, and establish a clean folder structure for pages, reusable components, API services, and types.
+
+Finished result: A working frontend project that can run locally and communicate with your backend.
+14.2 Configure Tailwind CSS and reusable UI components
+What you do: Set up consistent styling and build reusable elements such as buttons, input fields, forms, tables, navigation bars, dialogs, and cards.
+
+Finished result: A consistent interface without having to redesign every component separately.
+14.3 Build login and authenticated navigation
+What you do: Create the login screen, connect it to the backend authentication endpoint, and implement the application's authenticated navigation. Handle expired sessions or tokens appropriately.
+
+Finished result: Users can log in and navigate the system according to their authenticated status.
+14.4 Build role-specific interfaces
+What you do: Design navigation and pages for students, faculty, finance staff, and administrators. Hide irrelevant actions from each role, while still enforcing all permissions on the backend.
+
+Finished result: Each role gets an interface appropriate to its responsibilities.
+14.5 Build student and faculty profile screens
+What you do: Create profile pages and authorized editing forms. Retrieve profile data from the backend, validate input, and display useful success or error messages.
+
+Finished result: Users can view and manage permitted profile information.
+14.6 Build course, semester, and registration screens
+What you do: Build course catalogue views, semester selection, offering details, and registration forms. Show prerequisites, capacity information, registration statuses, and backend validation errors.
+
+Finished result: Users can browse available offerings and complete the registration workflow through the UI.
+14.7 Build assessment, marks, and transcript screens
+What you do: Create forms for authorized faculty to enter marks, views for students to check their grades, and academic summary or transcript-style report screens.
+
+Finished result: Assessment results and academic summaries can be accessed through the interface.
+14.8 Build attendance screens
+What you do: Create attendance-entry forms for authorized faculty and attendance views for students. Display attendance totals and percentages supplied or calculated by the backend.
+
+Finished result: Users can record or review attendance according to their permissions.
+14.9 Build fee-management screens
+What you do: Create views for fee records, amounts due, outstanding balances, and payment statuses. Provide finance-management forms for authorized staff.
+
+Finished result: Fee information can be reviewed and managed through the ERP.
+14.10 Build announcements and dashboards
+What you do: Create announcement lists, dashboard cards, and role-specific overviews. Connect each component to the relevant API rather than hardcoding the displayed information.
+
+Finished result: Users can see relevant announcements and summaries when they open the application.
+14.11 Build administrative management and reporting screens
+What you do: Create interfaces for managing relevant academic configuration and viewing authorized reports. Include tables, filters, and charts as required.
+
+Finished result: Administrators can manage the supported parts of the ERP without directly editing database records.
+14.12 Build the AI helpdesk chat interface
+What you do: Create the chat input, conversation display, send button, loading indicator, and error states. Connect the interface to the helpdesk API and associate requests with the authenticated session.
+
+Finished result: Users can ask questions and receive answers through the ERP.
+14.13 Display AI responses and document sources
+What you do: Display generated responses clearly, along with source-document titles and page or section references when available. Distinguish unavailable evidence or failed tool requests from successful answers.
+
+Finished result: Users can understand the AI's response and inspect the supporting sources.
+14.14 Integrate frontend screens with backend APIs
+What you do: Replace mock data with real API calls, define TypeScript types matching the API responses, and handle authentication, validation, and errors consistently.
+
+Finished result: The frontend and backend operate as one application.
+14.15 Implement loading states, validation messages, and error displays
+What you do: Show loading indicators while requests are in progress, validate forms, disable duplicate submissions where appropriate, and display helpful error messages.
+
+Finished result: Users know when operations are running, have succeeded, or have failed.
+
+15. Testing and evaluation
+This section is not just about finding bugs. It provides evidence that the system meets its requirements, protects information, and that the AI components work as intended.
+15.1 Write unit tests for backend functions and business rules
+What you do: Test individual functions independently, including registration checks, grading calculations, fee-balance calculations, and permission helpers.
+
+Finished result: Automated tests verify that individual pieces of business logic behave as expected.
+15.2 Test database constraints and transaction consistency
+What you do: Attempt to insert duplicate or invalid records, break foreign-key relationships, and simulate failures during multi-step operations.
+
+Finished result: The database maintains its integrity and does not leave partially completed operations.
+15.3 Test course registration validation and duplicate-registration prevention
+What you do: Test valid registration, unmet prerequisites, full courses, duplicate requests, unavailable offerings, and simultaneous attempts to claim the last seat.
+
+Finished result: Evidence that registration rules are enforced under ordinary and edge-case conditions.
+15.4 Test grade, GPA, and CGPA calculations
+What you do: Prepare expected results using your configured grading rules, then compare the backend's output against those results.
+
+Finished result: A set of automated tests demonstrates that academic calculations are correct according to your chosen rules.
+15.5 Test authentication and role-based access control
+What you do: Test login success and failure, protected endpoints, invalid or expired authentication credentials, and the permitted actions for each role.
+
+Finished result: Only authenticated and appropriately authorized users can perform protected operations.
+15.6 Test unauthorized read and write attempts
+What you do: Attempt to access another student's records, edit unrelated course marks, modify unauthorized fee records, and perform restricted administrative actions.
+
+Finished result: Unauthorized requests are rejected by the backend, including requests that bypass the frontend.
+15.7 Test API integration with the frontend and database
+What you do: Verify that frontend requests reach the correct endpoints, data is stored and retrieved correctly, and responses match the expected API contracts.
+
+Finished result: The components work together rather than only functioning in isolation.
+15.8 Test complete end-to-end ERP workflows
+An end-to-end test follows an entire user journey through the application.
+
+What you do: Test workflows such as:
+1. An administrator creates a course offering.
+2. A student registers for it.
+3. Faculty records attendance and marks.
+4. The system calculates the student's academic results.
+5. The student views the updated information.
+Finished result: Evidence that complete ERP workflows function across modules.
+15.9 Evaluate document retrieval relevance using a labelled query-document test set
+This is one of the core evaluations of your RAG system.
+
+What you do: Prepare a collection of test questions and identify which documents or passages should answer each question. Run those questions through the retriever and compare its results against your expected relevant passages.
+
+Possible metrics include Recall@k, which measures whether relevant passages appear in the top k retrieved results, and Mean Reciprocal Rank (MRR), which considers how highly the first relevant result appears.
+
+Finished result: Measurable evidence of how well your retrieval pipeline finds relevant information.
+15.10 Evaluate answer correctness and evidence grounding
+What you do: Prepare questions with expected answers, run them through the complete RAG pipeline, and compare the responses with the approved documents. Examine whether important claims are supported by the retrieved evidence.
+
+Finished result: An evaluation of whether the system answers accurately and stays grounded in the source material.
+15.11 Test source attribution and citation correctness
+What you do: Check whether each displayed citation points to the correct document and, where available, the correct page or section. Identify claims that cite unrelated passages.
+
+Finished result: Evidence that the displayed sources actually support the corresponding answers.
+15.12 Test insufficient-evidence fallback behavior
+What you do: Ask questions that are not covered by your documents, use ambiguous questions, and test cases where retrieval returns irrelevant passages.
+
+Finished result: The system appropriately abstains or asks for clarification rather than inventing an answer.
+15.13 Test AI agents against unauthorized or sensitive-data queries
+What you do: Try prompt-injection-style requests, attempts to obtain another user's records, and requests to bypass the agent's defined role. Verify that the backend rejects unauthorized tool calls regardless of the prompt.
+
+Finished result: Evidence that your AI integration preserves access controls even when the model behaves unexpectedly.
+15.14 Measure API response time and AI response latency
+What you do: Record how long ordinary API requests take and how long AI queries take, including retrieval and model generation. Test under representative workloads and document the conditions.
+
+Finished result: Actual performance measurements that can be included in your evaluation.
+15.15 Test reliability and error recovery
+What you do: Test database disconnections, unavailable model APIs, invalid responses, and failed tool calls. Verify that errors are handled cleanly and do not cause corrupted records or misleading success messages.
+
+Finished result: Evidence that the system handles expected failures safely.
+15.16 Conduct usability testing and collect feedback, if approved
+What you do: Ask a small, approved group of participants to complete representative tasks, such as registering for a course or finding a policy through the helpdesk. Collect feedback on ease of use and confusion points.
+
+Finished result: A documented usability evaluation. If participant testing is not approved or feasible, agree on an alternative evaluation with your supervisor.
+15.17 Fix defects and perform regression testing
+What you do: Fix identified bugs and rerun relevant tests, including tests for previously working functionality.
+
+Finished result: Changes are checked for unintended side effects.
+15.18 Prepare the final testing and evaluation results
+What you do: Compile the test cases, expected and actual outcomes, pass/fail results, retrieval and answer-quality metrics, performance measurements, and any limitations.
+
+Finished result: A testing and evaluation chapter supported by real results rather than unsupported claims that the system works perfectly.
+
+16. Integration, deployment, and final deliverables
+The final section turns the separate modules into a reproducible application and prepares everything needed for the FYP demonstration and submission.
+16.1 Integrate all ERP modules into the complete application
+What you do: Combine the profiles, courses, registration, grading, attendance, fees, announcements, dashboards, and administrative functions. Resolve mismatches between APIs, data models, and frontend expectations.
+
+Finished result: One application with connected modules and consistent data.
+16.2 Integrate the multi-agent helpdesk with the ERP
+What you do: Connect the document retrieval pipeline, specialist agents, LangGraph workflow, and authorized ERP tools. Verify that the helpdesk can answer supported document and record-based questions.
+
+Finished result: The AI helpdesk works within the ERP rather than operating as an unrelated chatbot.
+16.3 Resolve cross-module integration problems
+What you do: Identify issues that appear only when components interact—for example, a registration status that does not appear on a dashboard, or a frontend expecting a different API field name.
+
+Finished result: Cross-module workflows work consistently.
+16.4 Configure environment variables and application settings
+What you do: Store configuration such as database connection details, API keys, model settings, and permitted origins in environment variables or an appropriate secrets-management mechanism. Keep secrets out of source control.
+
+Finished result: The application can be configured safely for different environments.
+16.5 Prepare the deployment environment using Docker, if selected
+Docker packages an application and its dependencies into containers.
+
+What you do: Create the necessary Dockerfiles and configuration for the frontend, backend, and database services if your chosen architecture uses containers. Configure networking, environment variables, persistent database storage, and startup order.
+
+Finished result: The project can be started more consistently on another machine.
+
+Docker is a deployment option, not a mandatory feature unless your supervisor or project requirements make it one.
+16.6 Deploy the demonstration prototype
+What you do: Choose a suitable environment for demonstrating the application, configure the services, initialize the database, and verify that the application is accessible.
+
+Finished result: A working demonstration environment. It can be a local or limited hosted deployment; it does not need to serve an entire university.
+16.7 Prepare synthetic demo accounts and sample records
+What you do: Prepare fictional student, faculty, finance, and administrator accounts, along with realistic courses, registrations, grades, attendance, fees, and approved test documents.
+
+Finished result: The examiners can explore the application without needing real university records.
+16.8 Write installation and setup instructions
+What you do: Document prerequisites, environment setup, database initialization, migrations, seed scripts, API configuration, model configuration, and how to run the frontend and backend.
+
+Finished result: Another developer can reproduce the project using your instructions.
+16.9 Document the database schema and API endpoints
+What you do: Document the tables, relationships, constraints, endpoints, request/response formats, and authorization requirements. Include API examples where useful.
+
+Finished result: A technical reference for the system.
+16.10 Prepare system architecture and workflow diagrams
+What you do: Produce clear diagrams showing the application components, database relationships, user workflows, RAG pipeline, agent routing, and secure AI-to-ERP interactions.
+
+Finished result: Diagrams that explain the design in the proposal, final report, and presentation.
+16.11 Prepare the final technical documentation and report
+What you do: Document the problem, objectives, requirements, related work, system design, implementation, testing, evaluation, limitations, and future improvements according to your department's template.
+
+Finished result: A report that accurately describes what you implemented and what the evaluation demonstrated.
+16.12 Prepare the final presentation
+What you do: Summarize the problem, motivation, architecture, main ERP modules, RAG pipeline, multi-agent workflow, security approach, and evaluation results.
+
+Finished result: A clear presentation that explains both the system and the technical contribution.
+16.13 Prepare the project poster
+What you do: Condense the project's purpose, objectives, architecture, main features, and key results into a readable poster using your department's requirements.
+
+Finished result: A visual summary of the completed FYP.
+16.14 Prepare a demonstration script and viva questions
+What you do: Plan a repeatable demonstration with preconfigured accounts and sample data. Prepare to explain the database, backend authorization, RAG retrieval, agent responsibilities, LangGraph workflow, and testing results.
+
+A sensible demo could show a student registering for a course, a faculty member recording marks, the system calculating GPA, and the AI answering a policy question with a source.
+
+Finished result: A reliable demonstration and a team that can explain the implementation decisions and limitations.

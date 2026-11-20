@@ -1,0 +1,174 @@
+1. Requirements and system design
+- [.] Gather and finalize functional requirements.
+- [.] Define non-functional requirements.
+- [.] Finalize project scope and features.
+- [.] Define user roles and permissions.
+- [.] Identify end-to-end university workflows and use cases.
+- [.] Review existing ERP and university AI helpdesk systems.
+- [.] Design the overall system architecture.
+- [.] Design the database ERD and relational schema.
+- [.] Define database relationships, constraints, and normalization.
+- [.] Define backend API structure and module boundaries.
+- [.] Design the multi-agent architecture and agent communication workflow.
+- [.] Define security boundaries between the AI system and ERP backend.
+2. Database and backend foundation
+- [.] Set up the PostgreSQL database.
+- [.] Create database models and relationships.
+- [.] Implement database migrations.
+- [.] Add primary keys, foreign keys, unique constraints, and validation constraints.
+- [.] Create seed data and synthetic test accounts.
+- [.] Set up the FastAPI backend.
+- [.] Implement common request validation and error handling.
+- [.] Establish REST API conventions.
+- [.] Implement authentication and secure password hashing.
+- [.] Implement role-based access control (RBAC).
+- [.] Implement server-side authorization for protected records and operations.
+- [.] Implement common database transaction and integrity handling.
+3. Student and faculty management
+- [ ] Create student profiles.
+- [ ] Create faculty profiles.
+- [ ] Implement profile viewing and editing according to permissions.
+- [ ] Manage departments and academic programs.
+- [ ] Connect users to their relevant academic records and roles.
+4. Course and semester management
+- [ ] Create and manage the course catalogue.
+- [ ] Create and manage semesters.
+- [ ] Configure course offerings for each semester.
+- [ ] Assign courses to faculty members.
+- [ ] Manage course prerequisites.
+- [ ] Configure course seat capacities.
+- [ ] Display available courses and their details.
+5. Course registration
+- [ ] Implement student course registration.
+- [ ] Validate prerequisite requirements.
+- [ ] Validate course capacity.
+- [ ] Prevent duplicate or invalid registrations.
+- [ ] Store and display registration status.
+- [ ] Allow authorized users to view relevant registration records.
+- [ ] Handle registration errors and conflicting requests.
+6. Assessment, grading, and transcripts
+- [ ] Implement assessment and marks entry.
+- [ ] Allow authorized faculty to manage marks for their assigned courses.
+- [ ] Implement configurable grading rules.
+- [ ] Calculate final grades using the configured rules.
+- [ ] Calculate GPA.
+- [ ] Calculate CGPA.
+- [ ] Generate transcript-style academic reports.
+- [ ] Validate grade calculations against test cases.
+- [ ] Restrict access to marks, grades, and transcripts according to roles.
+7. Attendance management
+- [ ] Record student attendance.
+- [ ] View attendance records.
+- [ ] Calculate attendance summaries or percentages.
+- [ ] Restrict attendance entry to authorized users.
+- [ ] Provide authorized attendance reports.
+8. Fee management
+- [ ] Create and manage fee invoices or fee records.
+- [ ] Record fee amounts and balances.
+- [ ] Maintain payment-status records.
+- [ ] Display fee details to authorized users.
+- [ ] Provide relevant finance summaries and reports.
+- [ ] Protect financial information using server-side permissions.
+The proposal supports fee management and payment-status records; a real payment gateway is not established as a required feature.
+9. Announcements, dashboards, and reports
+- [ ] Implement announcement creation and management.
+- [ ] Display announcements to the relevant users.
+- [ ] Create student dashboards.
+- [ ] Create faculty dashboards.
+- [ ] Create administrative dashboards.
+- [ ] Display relevant academic and registration summaries.
+- [ ] Display grade, GPA/CGPA, attendance, and fee summaries where applicable.
+- [ ] Generate administrative reports.
+- [ ] Implement charts and visual summaries.
+10. RAG document retrieval pipeline
+- [ ] Collect approved university documents or prepare clearly identified synthetic documents.
+- [ ] Implement document ingestion.
+- [ ] Extract text from supported document formats.
+- [ ] Split documents into searchable chunks.
+- [ ] Generate embeddings using Sentence Transformers or the selected embedding approach.
+- [ ] Store embeddings in PostgreSQL using pgvector.
+- [ ] Implement semantic retrieval.
+- [ ] Retrieve relevant document passages for a query.
+- [ ] Select supporting evidence for AI-generated answers.
+- [ ] Preserve document references for source attribution.
+- [ ] Handle missing, irrelevant, or insufficient evidence.
+11. Individual AI agents
+These are the proposed specialist agents for organizing your multi-agent helpdesk.
+- [ ] Policy and Information Agent: Answer questions using approved university documents.
+- [ ] Academic Records and Registration Agent: Handle authorized queries about courses, registration, attendance, marks, grades, GPA/CGPA, and transcripts.
+- [ ] Finance and Student Services Agent: Handle authorized fee, invoice, payment-status, and relevant administrative queries.
+- [ ] Define the responsibilities and tools available to each agent.
+- [ ] Implement each agent's instructions and request-handling logic.
+- [ ] Connect each agent to its required retrieval functions or backend APIs.
+- [ ] Handle unsupported questions and agent errors.
+12. Multi-agent orchestration
+- [ ] Implement the shared LangGraph workflow.
+- [ ] Implement query-intent classification and routing.
+- [ ] Route questions to the appropriate specialist agent.
+- [ ] Implement agent handoffs and tool invocation.
+- [ ] Handle queries requiring multiple steps or sources.
+- [ ] Manage workflow state and error handling.
+- [ ] Combine agent results into a final response.
+- [ ] Implement fallback behavior when the system cannot answer reliably.
+- [ ] Display supporting sources when available.
+13. Secure AI-to-ERP integration
+- [ ] Define the ERP backend tools that AI agents are allowed to use.
+- [ ] Implement authorized read tools for student and academic records.
+- [ ] Implement authorized read tools for fee and finance records.
+- [ ] Pass authenticated user context into protected tool calls.
+- [ ] Enforce permissions on the backend for every protected tool call.
+- [ ] Prevent agents from accessing unauthorized records.
+- [ ] Ensure official calculations use backend business rules rather than AI-generated arithmetic.
+- [ ] Prevent unsupported AI answers from being presented as verified university facts.
+- [ ] Handle unauthorized requests and insufficient evidence safely.
+- [ ] Integrate the AI helpdesk into the ERP web interface.
+14. Frontend development
+- [ ] Set up the React and TypeScript frontend.
+- [ ] Configure Tailwind CSS and reusable UI components.
+- [ ] Build login and authenticated navigation.
+- [ ] Build role-specific interfaces.
+- [ ] Build student and faculty profile screens.
+- [ ] Build course, semester, and registration screens.
+- [ ] Build assessment, marks, and transcript screens.
+- [ ] Build attendance screens.
+- [ ] Build fee-management screens.
+- [ ] Build announcements and dashboards.
+- [ ] Build administrative management and reporting screens.
+- [ ] Build the AI helpdesk chat interface.
+- [ ] Display AI responses and document sources.
+- [ ] Integrate frontend screens with the backend APIs.
+- [ ] Implement loading states, validation messages, and error displays.
+15. Testing and evaluation
+- [ ] Write unit tests for backend functions and business rules.
+- [ ] Test database constraints and transaction consistency.
+- [ ] Test course registration validation and duplicate-registration prevention.
+- [ ] Test grade, GPA, and CGPA calculations.
+- [ ] Test authentication and role-based access control.
+- [ ] Test unauthorized read and write attempts.
+- [ ] Test API integration with the frontend and database.
+- [ ] Test complete end-to-end ERP workflows.
+- [ ] Evaluate document retrieval relevance using a labelled query-document test set.
+- [ ] Evaluate answer correctness and evidence grounding.
+- [ ] Test source attribution and citation correctness.
+- [ ] Test insufficient-evidence fallback behavior.
+- [ ] Test AI agents against unauthorized or sensitive-data queries.
+- [ ] Measure API response time and AI response latency.
+- [ ] Test reliability and error recovery.
+- [ ] Conduct usability testing and collect feedback, if approved.
+- [ ] Fix defects and perform regression testing.
+- [ ] Prepare the final testing and evaluation results.
+16. Integration, deployment, and final deliverables
+- [ ] Integrate all ERP modules into the complete application.
+- [ ] Integrate the multi-agent helpdesk with the ERP.
+- [ ] Resolve cross-module integration problems.
+- [ ] Configure environment variables and application settings.
+- [ ] Prepare the deployment environment using Docker, if selected.
+- [ ] Deploy the demonstration prototype.
+- [ ] Prepare synthetic demo accounts and sample records.
+- [ ] Write installation and setup instructions.
+- [ ] Document the database schema and API endpoints.
+- [ ] Prepare system architecture and workflow diagrams.
+- [ ] Prepare the final technical documentation and report.
+- [ ] Prepare the final presentation.
+- [ ] Prepare the project poster.
+- [ ] Prepare a demonstration script and viva questions.

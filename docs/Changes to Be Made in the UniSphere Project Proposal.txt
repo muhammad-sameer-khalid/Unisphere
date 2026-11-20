@@ -1,0 +1,25 @@
+1. CLO/PLO attainment will not be included in the proposed ERP functionality.
+2. A separate notification subsystem will not be included in the proposed modules.
+3. Announcements will remain an included feature of the system.
+4. Fee management will be limited to maintaining fee records and tracking payment statuses.
+5. A live payment gateway and actual payment processing will not be included in the project scope.
+6. The prototype will use synthetic or authorized test data rather than unrestricted access to real university records.
+7. The proposed system will be developed as a prototype and will not replace the university's existing production ERP.
+8. Live integration with existing university systems will not be included unless specifically approved.
+9. AI queries will retrieve information from UniSphere's own database through authorized backend services.
+10. The AI system will not autonomously modify official grades, course registrations, or financial records.
+11. AI access to ERP information will initially be limited to read-only queries.
+12. GPA and CGPA calculations will be performed through deterministic backend logic rather than relying on LLM-generated calculations.
+13. Grading scales, assessment weights, and other grading rules will need to be configured before they can be applied; no official rules will be assumed.
+14. Course registration constraints will only be enforced when the relevant institutional rules have been confirmed and configured.
+15. Finance Personnel will be added as a defined user role alongside Student, Faculty, and Administrator.
+16. Role-based and record-level authorization will be implemented to ensure users can only access information permitted by their roles and ownership.
+17. The RAG helpdesk will provide source references to support its answers and ensure responses are grounded in approved university documents.
+18. The AI helpdesk will provide safe fallback responses when questions cannot be answered using sufficient supporting information.
+19. The multi-agent workflow will be responsible for routing user requests to the appropriate agents, tools, and backend services.
+20. Backend services will remain responsible for validating requests and enforcing access permissions; AI agents will not bypass these controls.
+21. The proposed system modules will be updated to reflect the finalized project scope and included features.
+22. The development task breakdown will include announcements and dashboards as part of the implementation work.
+23. Project milestones will be updated to reflect the finalized ERP modules and multi-agent AI workflow.
+24. The evaluation process will include retrieval relevance, answer correctness, source grounding, and permission enforcement.
+25. Project limitations will clarify that the prototype uses synthetic or authorized test data and supports a restricted set of university workflows rather than a complete production ERP system.
