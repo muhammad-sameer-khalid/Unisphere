@@ -1,23 +1,23 @@
 1. Requirements and system design
-- [.] Gather and finalize functional requirements.
-- [.] Define non-functional requirements.
-- [.] Finalize project scope and features.
-- [.] Define user roles and permissions.
-- [.] Identify end-to-end university workflows and use cases.
-- [.] Review existing ERP and university AI helpdesk systems.
-- [.] Design the overall system architecture.
-- [.] Design the database ERD and relational schema.
-- [.] Define database relationships, constraints, and normalization.
-- [.] Define backend API structure and module boundaries.
-- [.] Design the multi-agent architecture and agent communication workflow.
-- [.] Define security boundaries between the AI system and ERP backend.
+- [.done] Gather and finalize functional requirements.
+- [.done] Define non-functional requirements.
+- [.done] Finalize project scope and features.
+- [.done] Define user roles and permissions.
+- [.done] Identify end-to-end university workflows and use cases.
+- [.done] Review existing ERP and university AI helpdesk systems.
+- [.done] Design the overall system architecture.
+- [.done] Design the database ERD and relational schema.
+- [.done] Define database relationships, constraints, and normalization.
+- [.done] Define backend API structure and module boundaries.
+- [.done] Design the multi-agent architecture and agent communication workflow.
+- [.done] Define security boundaries between the AI system and ERP backend.
 2. Database and backend foundation
-- [.] Set up the PostgreSQL database.
-- [.] Create database models and relationships.
-- [.] Implement database migrations.
-- [.] Add primary keys, foreign keys, unique constraints, and validation constraints.
+- [.done] Set up the PostgreSQL database.
+- [.done] Create database models and relationships.
+- [.done] Implement database migrations.
+- [.done] Add primary keys, foreign keys, unique constraints, and validation constraints.
 - [.] Create seed data and synthetic test accounts.
-- [.] Set up the FastAPI backend.
+- [.done] Set up the FastAPI backend.
 - [.] Implement common request validation and error handling.
 - [.] Establish REST API conventions.
 - [.] Implement authentication and secure password hashing.

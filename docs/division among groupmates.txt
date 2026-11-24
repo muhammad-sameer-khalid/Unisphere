@@ -25,13 +25,13 @@
 - [ ] Implement server-side authorization for protected records and operations.
 
 *For Ayesha*
-- [ ] Create database models and relationships.
-- [ ] Implement database migrations.
-- [ ] Set up the FastAPI backend.
-- [ ] Implement common database transaction and integrity handling.
+- [done] Create database models and relationships.
+- [done] Implement database migrations.
+- [done] Add primary keys, foreign keys, unique constraints, and validation constraints.
+- [done] Set up the FastAPI backend.
 
 *For Rayyan*
-- [ ] Add primary keys, foreign keys, unique constraints, and validation constraints.
 - [ ] Create seed data and synthetic test accounts.
+- [ ] Implement common database transaction and integrity handling.
 - [ ] Implement common request validation and error handling.
 - [ ] Implement role-based access control (RBAC).
