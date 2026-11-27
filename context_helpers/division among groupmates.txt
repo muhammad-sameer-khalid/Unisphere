@@ -32,6 +32,6 @@
 
 *For Rayyan*
 - [ ] Create seed data and synthetic test accounts.
-- [ ] Implement common database transaction and integrity handling.
 - [ ] Implement common request validation and error handling.
 - [ ] Implement role-based access control (RBAC).
+- [ ] Implement common database transaction and integrity handling.
